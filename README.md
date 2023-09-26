@@ -65,16 +65,15 @@ In Firestore:
 #### Deploy after code changes
 
 ```
+gcloud config set project <id of your project>
 gcloud functions deploy record-climate-data \
 --gen2 \
---region=europe-west2 \
+--region=<region of your cloud function> \
 --runtime=python311 \
 --source=. \
 --entry-point=serve \
 --trigger-http
 ```
-
-Replace the region as appropriate.
 
 ## TODOS
 
