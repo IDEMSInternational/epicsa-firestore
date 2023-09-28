@@ -12,11 +12,11 @@ There are multiple components:
 
 Query URLs support the following paths:
 
-- `record`: Record a new entry (creates a new entry)
+- `record`: (new entry data) Record a new entry (creates a new entry)
 - `confirm` (uuid): Verify an entry (adds a confirmation_timestamp)
-- `update` (uuid): Obsolete an entry (adds obsoleted_by) and record a new entry (correction)
+- `update` (uuid, new entry data): Record a new entry and obsolete the entry with `uuid` (adds `obsoleted_by`)
 - `retrieve` (uuid): Retrieve an entry
-- `list_recent` (station_uuid): Returns recent entries with "station_uuid"
+- `list_recent` (contact_uuid, limit): Returns `limit` most recent entries submitted by `contact_uuid`
 
 Firestore entries have a uuid and contain
 
@@ -79,3 +79,5 @@ gcloud functions deploy record-climate-data \
 
 - Upload the flows
 - Secure the Cloud function through an Authorization token or password
+- Ensure `update` doesn't create a duplicate entry (same date, same type)
+- After warnings, allow user to directly edit the entry.

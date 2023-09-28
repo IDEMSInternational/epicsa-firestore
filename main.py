@@ -72,6 +72,7 @@ def list_recent_entries(request_json):
         measurement_type = doc['measurement_type']
         value = doc['measurement_value']
         text += f"{i+1}. {doc['date']}: {measurement_type} = {value}\n"
+        doc['measurement_value'] = str(value)  # RapidPro doesn't like NaN
         records.append(doc)
         uuids.append(doc['uuid'])
     return {'text' : text, 'uuids' : uuids}, 200
@@ -98,6 +99,7 @@ def check_warnings(request_json):
         return {}
     try:
         value = float(request_json['measurement_value'])
+        request_json['measurement_value'] = value
     except:
         return {'warning' : 'Value is not a number.'}
 
@@ -154,7 +156,14 @@ def record_entry(request_json, check_existing=True):
     if check_existing:
         existing = check_existing_records(request_json)
         if existing is not None:
-            return existing | {'existing': 'True'}, 200
+            # RapidPro doesn't like NaN, so we convert measurement_type
+            return {
+                    'existing': 'True',
+                    'uuid' : existing['uuid'],
+                    'measurement_value' : str(existing['measurement_value']),
+                    'measurement_type' : existing['measurement_type'],
+                    'date' : existing['date']
+                }, 200
     warnings = check_warnings(request_json)
     uuid = write_record(request_json | {'submission_timestamp' : str(datetime.utcnow())})
     return {'uuid' : uuid} | warnings, 200
@@ -170,7 +179,7 @@ def update_entry(request_json):
     old_uuid = request_json.pop('uuid')
     result = record_entry(request_json, check_existing=False)
     new_uuid = result[0].get('uuid')
-    print(old_uuid, new_uuid)
+    # print(old_uuid, new_uuid)
     if new_uuid:
         result2 = get_or_update_fields(request_json | {'uuid' : old_uuid}, {'obsoleted_by' : new_uuid, 'is_obsolete' : True})
         if 'error' in result2:
